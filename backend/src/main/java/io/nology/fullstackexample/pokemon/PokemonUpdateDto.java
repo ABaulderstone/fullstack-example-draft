@@ -16,4 +16,36 @@ public class PokemonUpdateDto {
 
   @Min(5)
   private Integer attackPower;
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getElement() {
+    return element;
+  }
+
+  public void setElement(String element) {
+    this.element = element;
+  }
+
+  public Integer getHp() {
+    return hp;
+  }
+
+  public void setHp(Integer hp) {
+    this.hp = hp;
+  }
+
+  public Integer getAttackPower() {
+    return attackPower;
+  }
+
+  public void setAttackPower(Integer attackPower) {
+    this.attackPower = attackPower;
+  }
 }

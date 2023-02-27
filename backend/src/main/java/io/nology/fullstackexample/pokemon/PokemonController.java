@@ -56,6 +56,7 @@ public class PokemonController {
     @Valid @RequestBody PokemonUpdateDto data
   ) {
     Pokemon foundPokemon = this.findPokemonOrThrow(id);
+
     Pokemon updatedPokemon = this.pokemonService.update(foundPokemon, data);
     return new ResponseEntity<>(updatedPokemon, HttpStatus.OK);
   }
