@@ -3,15 +3,20 @@ package io.nology.fullstackexample.pokemon;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.nology.fullstackexample.TestConfig;
+import java.util.List;
+import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 @SpringBootTest(
@@ -52,12 +57,51 @@ public class PokemonControllerEndToEndTests {
     pokemonRepository.deleteAll();
   }
 
-  @Test
-  public void findAllPokemon_returnsAllPokemonInDb() {
-    ResponseEntity<String> response = restTemplate.getForEntity(
-      "/pokemon",
-      String.class
-    );
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+  @Nested
+  class FindAllTests {
+
+    @Test
+    public void findAllPokemon_returnsAllPokemonInDb() {
+      ResponseEntity<String> response = restTemplate.getForEntity(
+        "/pokemon",
+        String.class
+      );
+      assertEquals(HttpStatus.OK, response.getStatusCode());
+      Pokemon[] pokemon = restTemplate.getForObject(
+        "/pokemon",
+        Pokemon[].class
+      );
+      assertEquals(3, pokemon.length);
+    }
+
+    @Test
+    public void findAllPokemon_returnsEmptyArrayWhenDbEmpty() {
+      pokemonRepository.deleteAll();
+      ResponseEntity<String> response = restTemplate.getForEntity(
+        "/pokemon",
+        String.class
+      );
+      assertEquals(HttpStatus.OK, response.getStatusCode());
+      Pokemon[] pokemon = restTemplate.getForObject(
+        "/pokemon",
+        Pokemon[].class
+      );
+      assertEquals(0, pokemon.length);
+    }
+  }
+
+  @Nested
+  class createTests {
+
+    private HttpHeaders headers;
+
+    @BeforeEach
+    public void createHeaders() {
+      headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+    }
+
+    @Test
+    public void createPokemon_persistsPokemonInDbWhenPassedCorrectBody() {}
   }
 }
