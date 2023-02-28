@@ -1,8 +1,10 @@
 package io.nology.fullstackexample.pokemon;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nology.fullstackexample.TestConfig;
 import org.junit.jupiter.api.AfterEach;
@@ -20,11 +22,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 
 @SpringBootTest(
   properties = "test.base-url=http://localhost:8080",
   webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
 )
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Import(TestConfig.class)
 public class PokemonControllerEndToEndTests {
 
@@ -142,6 +146,23 @@ public class PokemonControllerEndToEndTests {
       assertEquals("Normal", pokemon.getElement());
       assertEquals(50, pokemon.getHp());
       assertEquals(50, pokemon.getRemainingHp());
+    }
+
+    @Test
+    public void createPokemon_respondsWithBadRequestWhenPassedInvalidBody()
+      throws JsonProcessingException {
+      String requestBody = "{\"name\": \"\", \"hp\": 5, \"attackPower\": 1}";
+
+      HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+      ResponseEntity<String> response = restTemplate.postForEntity(
+        "/pokemon",
+        entity,
+        String.class
+      );
+      assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+
+      JsonNode responseBody = objectMapper.readTree(response.getBody());
+      assertTrue(responseBody.has("errors"));
     }
   }
 }
