@@ -2,10 +2,11 @@ package io.nology.fullstackexample.pokemon;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nology.fullstackexample.TestConfig;
-import java.util.List;
-import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -41,6 +43,12 @@ public class PokemonControllerEndToEndTests {
   private Pokemon bulbasaur;
   private Pokemon squirtle;
   private Pokemon charmander;
+  private static ObjectMapper objectMapper;
+
+  @BeforeAll
+  public static void config() {
+    objectMapper = new ObjectMapper();
+  }
 
   @BeforeEach
   public void setup() {
@@ -91,7 +99,7 @@ public class PokemonControllerEndToEndTests {
   }
 
   @Nested
-  class createTests {
+  class CreateTests {
 
     private HttpHeaders headers;
 
@@ -102,6 +110,38 @@ public class PokemonControllerEndToEndTests {
     }
 
     @Test
-    public void createPokemon_persistsPokemonInDbWhenPassedCorrectBody() {}
+    public void createPokemon_persistsPokemonInDbWhenPassedCorrectBody() {
+      String requestBody =
+        "{\"name\": \"Ditto\", \"element\": \"Normal\", \"hp\": 50, \"attackPower\": 10}";
+      long pokemonCount = pokemonRepository.count();
+      HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+      restTemplate.postForEntity("/pokemon", entity, String.class);
+      assertEquals(pokemonCount + 1, pokemonRepository.count());
+    }
+
+    @Test
+    public void createPokemon_respondsWithCreatedPokemonWhenPassedCorrectBody()
+      throws JsonProcessingException {
+      String requestBody =
+        "{\"name\": \"Ditto\", \"element\": \"Normal\", \"hp\": 50, \"attackPower\": 10}";
+      // this is a custom query - check the repository code
+      Long lastId = pokemonRepository.lastUsedId();
+      HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+      ResponseEntity<String> response = restTemplate.postForEntity(
+        "/pokemon",
+        entity,
+        String.class
+      );
+      assertEquals(HttpStatus.CREATED, response.getStatusCode());
+      String responseBody = response.getBody();
+      Pokemon pokemon = objectMapper.readValue(responseBody, Pokemon.class);
+      System.out.println(responseBody);
+      assertEquals(lastId + 1, pokemon.getId());
+      assertEquals("Ditto", pokemon.getName());
+      assertEquals(10, pokemon.getAttackPower());
+      assertEquals("Normal", pokemon.getElement());
+      assertEquals(50, pokemon.getHp());
+      assertEquals(50, pokemon.getRemainingHp());
+    }
   }
 }
