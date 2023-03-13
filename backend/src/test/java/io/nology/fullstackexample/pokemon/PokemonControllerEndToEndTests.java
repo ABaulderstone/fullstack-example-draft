@@ -1,6 +1,7 @@
 package io.nology.fullstackexample.pokemon;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -163,6 +164,26 @@ public class PokemonControllerEndToEndTests {
 
       JsonNode responseBody = objectMapper.readTree(response.getBody());
       assertTrue(responseBody.has("errors"));
+
+      JsonNode errorsNode = responseBody.get("errors");
+      assertTrue(errorsNode.isObject());
+
+      JsonNode nameError = errorsNode.get("name");
+      assertNotNull(nameError);
+      assertTrue(nameError.isArray());
+      assertEquals(1, nameError.size());
+      assertEquals("must not be blank", nameError.get(0).asText());
+
+      JsonNode hpError = errorsNode.get("hp");
+      assertNotNull(hpError);
+      assertTrue(hpError.isArray());
+      assertEquals(1, hpError.size());
+      assertEquals(
+        "must be greater than or equal to 20",
+        hpError.get(0).asText()
+      );
     }
   }
+
+  @Nested
 }
