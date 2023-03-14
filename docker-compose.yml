@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  spring:
+    build: ./backend
+    ports:
+      - '8081:8080'
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/pokemon_backend
+      SPRING_DATASOURCE_USERNAME: testUser
+      SPRING_DATASOURCE_PASSWORD: password1
+    command: sh -c 'sleep 15 && java -jar /app/pokemon-backend.jar'
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: pokemon_backend
+      MYSQL_USER: testUser
+      MYSQL_PASSWORD: password1
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - '3307:3306'
+    volumes:
+      - ./database/mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      timeout: 20s
+      retries: 5
+  client:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - '3000:5173'
+    # volumes:
+    #   - /app/node_modules
+    #   - .:/app
+    environment:
+      BACKEND_ADDRESS: spring
+    command: npm run dev
+
+volumes:
+  mysql-data:
