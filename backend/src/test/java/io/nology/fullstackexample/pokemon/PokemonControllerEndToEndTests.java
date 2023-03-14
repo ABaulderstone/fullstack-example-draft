@@ -140,7 +140,6 @@ public class PokemonControllerEndToEndTests {
       assertEquals(HttpStatus.CREATED, response.getStatusCode());
       String responseBody = response.getBody();
       Pokemon pokemon = objectMapper.readValue(responseBody, Pokemon.class);
-      System.out.println(responseBody);
       assertEquals(lastId + 1, pokemon.getId());
       assertEquals("Ditto", pokemon.getName());
       assertEquals(10, pokemon.getAttackPower());
@@ -186,4 +185,5 @@ public class PokemonControllerEndToEndTests {
   }
 
   @Nested
+  class FibdByIdTests {}
 }
